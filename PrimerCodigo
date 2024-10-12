@@ -1,0 +1,262 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <iomanip>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+// Clase que representa el proceso de tanqueo en una gasolinera
+class Tanquear {
+public:
+    // Constructor de la clase Tanquear
+    Tanquear() {
+        srand(time(NULL)); // Inicializamos la semilla del generador de números aleatorios
+
+        // Asignamos capacidades de combustible aleatorias entre 8000 y 15000 galones
+        regularCapacidad = 8000 + rand() % 7001;
+        premiumCapacidad = 8000 + rand() % 7001;
+        ecoExtraCapacidad = 8000 + rand() % 7001;
+
+        // Inicializamos el combustible disponible con la capacidad total
+        regular = regularCapacidad;
+        premium = premiumCapacidad;
+        ecoExtra = ecoExtraCapacidad;
+
+        // Asignamos un número aleatorio de dispensadores entre 2 y 12
+        numDispensadoresRegular = 2 + rand() % 11;   // Aleatorio entre 2 y 12
+        numDispensadoresPremium = 2 + rand() % 11;   // Aleatorio entre 2 y 12
+        numDispensadoresEcoExtra = 2 + rand() % 11;  // Aleatorio entre 2 y 12
+
+        // Creamos arrays dinámicos para almacenar las ventas por dispensador
+        ventasRegular = new int[numDispensadoresRegular]();
+        ventasPremium = new int[numDispensadoresPremium]();
+        ventasEcoExtra = new int[numDispensadoresEcoExtra]();
+        numeroVentasRegular = new int[numDispensadoresRegular]();
+        numeroVentasPremium = new int[numDispensadoresPremium]();
+        numeroVentasEcoExtra = new int[numDispensadoresEcoExtra]();
+        codigosRegular = new int[numDispensadoresRegular];
+        codigosPremium = new int[numDispensadoresPremium];
+        codigosEcoExtra = new int[numDispensadoresEcoExtra];
+        modelosRegular = new string[numDispensadoresRegular];
+        modelosPremium = new string[numDispensadoresPremium];
+        modelosEcoExtra = new string[numDispensadoresEcoExtra];
+
+        // Inicializar vectores para almacenar las cédulas de ventas
+        cedulasRegular = vector<vector<string>>(numDispensadoresRegular);
+        cedulasPremium = vector<vector<string>>(numDispensadoresPremium);
+        cedulasEcoExtra = vector<vector<string>>(numDispensadoresEcoExtra);
+
+        // Asignamos modelos aleatorios a cada dispensador
+        asignarModelos();
+
+        for (int i = 0; i < numDispensadoresRegular; i++) {
+            ventasRegular[i] = 0;
+            numeroVentasRegular[i] = 0;
+            codigosRegular[i] = 1000 + i; // Códigos de dispensadores
+        }
+
+        for (int i = 0; i < numDispensadoresPremium; i++) {
+            ventasPremium[i] = 0;
+            numeroVentasPremium[i] = 0;
+            codigosPremium[i] = 2000 + i; // Códigos de dispensadores
+        }
+
+        for (int i = 0; i < numDispensadoresEcoExtra; i++) {
+            ventasEcoExtra[i] = 0;
+            numeroVentasEcoExtra[i] = 0;
+            codigosEcoExtra[i] = 3000 + i; // Códigos de dispensadores
+        }
+    }
+
+    // Destructor para liberar memoria dinámica
+    ~Tanquear() {
+        delete[] ventasRegular;
+        delete[] ventasPremium;
+        delete[] ventasEcoExtra;
+        delete[] numeroVentasRegular;
+        delete[] numeroVentasPremium;
+        delete[] numeroVentasEcoExtra;
+        delete[] codigosRegular;
+        delete[] codigosPremium;
+        delete[] codigosEcoExtra;
+        delete[] modelosRegular;
+        delete[] modelosPremium;
+        delete[] modelosEcoExtra;
+    }
+
+    // Método para simular los tanqueos de combustible
+    void simularTanqueos() {
+        while (regular > 0 || premium > 0 || ecoExtra > 0) {
+            int tipoCombustible = rand() % 3; // Selecciona un tipo de combustible al azar
+            if (rand() % 100 < 80) { // 80% de probabilidad de realizar una venta
+                int cantidadVenta = 3 + rand() % 18; // Se determina la cantidad a vender entre 3 y 20 litros
+                string cedula = generarCedulaAleatoria(); // Genera una cédula aleatoria
+                switch (tipoCombustible) {
+                case 0: // Regular
+                    if (regular >= cantidadVenta) {
+                        regular -= cantidadVenta;
+                        int dispensador = rand() % numDispensadoresRegular;
+                        ventasRegular[dispensador] += cantidadVenta;
+                        numeroVentasRegular[dispensador]++;
+                        cedulasRegular[dispensador].push_back(cedula); // Asigna cédula a la venta
+                    } else {
+                        regular = 0;
+                    }
+                    break;
+                case 1: // Premium
+                    if (premium >= cantidadVenta) {
+                        premium -= cantidadVenta;
+                        int dispensador = rand() % numDispensadoresPremium;
+                        ventasPremium[dispensador] += cantidadVenta;
+                        numeroVentasPremium[dispensador]++;
+                        cedulasPremium[dispensador].push_back(cedula); // Asigna cédula a la venta
+                    } else {
+                        premium = 0;
+                    }
+                    break;
+                case 2: // EcoExtra
+                    if (ecoExtra >= cantidadVenta) {
+                        ecoExtra -= cantidadVenta;
+                        int dispensador = rand() % numDispensadoresEcoExtra;
+                        ventasEcoExtra[dispensador] += cantidadVenta;
+                        numeroVentasEcoExtra[dispensador]++;
+                        cedulasEcoExtra[dispensador].push_back(cedula); // Asigna cédula a la venta
+                    } else {
+                        ecoExtra = 0;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Método para mostrar el reporte de tanqueos
+    void mostrarReporte() {
+        cout << "Reporte de tanqueos:\n";
+
+        // Reporte para Regular
+        cout << "\nRegular (" << numDispensadoresRegular << " dispensadores):\n";
+        for (int i = 0; i < numDispensadoresRegular; i++) {
+            cout << "  Dispensador " << i + 1 << " (Codigo: " << setw(6) << setfill('0') << codigosRegular[i]
+                 << ", Modelo: " << modelosRegular[i] << ")\n"; // Muestra el modelo
+        }
+
+        // Reporte para Premium
+        cout << "\nPremium (" << numDispensadoresPremium << " dispensadores):\n";
+        for (int i = 0; i < numDispensadoresPremium; i++) {
+            cout << "  Dispensador " << i + 1 << " (Codigo: " << setw(6) << setfill('0') << codigosPremium[i]
+                 << ", Modelo: " << modelosPremium[i] << ")\n"; // Muestra el modelo
+        }
+
+        // Reporte para EcoExtra
+        cout << "\nEcoExtra (" << numDispensadoresEcoExtra << " dispensadores):\n";
+        for (int i = 0; i < numDispensadoresEcoExtra; i++) {
+            cout << "  Dispensador " << i + 1 << " (Codigo: " << setw(6) << setfill('0') << codigosEcoExtra[i]
+                 << ", Modelo: " << modelosEcoExtra[i] << ")\n"; // Muestra el modelo
+        }
+    }
+
+    // Función para mostrar datos del dispensador específico por código
+    void mostrarDatosDispensador(int codigo) {
+        bool encontrado = false;
+
+        for (int i = 0; i < numDispensadoresRegular; i++) {
+            if (codigosRegular[i] == codigo) {
+                mostrarInformacionDispensador(i, "Regular");
+                encontrado = true;
+                break;
+            }
+        }
+
+        for (int i = 0; i < numDispensadoresPremium; i++) {
+            if (codigosPremium[i] == codigo) {
+                mostrarInformacionDispensador(i, "Premium");
+                encontrado = true;
+                break;
+            }
+        }
+
+        for (int i = 0; i < numDispensadoresEcoExtra; i++) {
+            if (codigosEcoExtra[i] == codigo) {
+                mostrarInformacionDispensador(i, "EcoExtra");
+                encontrado = true;
+                break;
+            }
+        }
+
+        if (!encontrado) {
+            cout << "Dispensador no encontrado.\n";
+        }
+    }
+
+private:
+    int regularCapacidad, premiumCapacidad, ecoExtraCapacidad;
+    int regular, premium, ecoExtra;
+
+    int numDispensadoresRegular, numDispensadoresPremium, numDispensadoresEcoExtra;
+    int* ventasRegular;    // Arreglo dinámico para dispensadores de combustible regular
+    int* ventasPremium;    // Arreglo dinámico para dispensadores de combustible premium
+    int* ventasEcoExtra;   // Arreglo dinámico para dispensadores de combustible ecoextra
+    int* numeroVentasRegular; // Ventas por dispensador
+    int* numeroVentasPremium; // Ventas por dispensador
+    int* numeroVentasEcoExtra; // Ventas por dispensador
+    int* codigosRegular;  // Códigos de dispensadores de combustible regular
+    int* codigosPremium;  // Códigos de dispensadores de combustible premium
+    int* codigosEcoExtra; // Códigos de dispensadores de combustible ecoextra
+    string* modelosRegular; // Modelos de dispensadores de combustible regular
+    string* modelosPremium; // Modelos de dispensadores de combustible premium
+    string* modelosEcoExtra; // Modelos de dispensadores de combustible ecoextra
+
+    vector<vector<string>> cedulasRegular; // Cédulas para dispensadores de combustible regular
+    vector<vector<string>> cedulasPremium; // Cédulas para dispensadores de combustible premium
+    vector<vector<string>> cedulasEcoExtra; // Cédulas para dispensadores de combustible ecoextra
+
+    // Método para asignar modelos aleatorios a los dispensadores
+    void asignarModelos() {
+        for (int i = 0; i < numDispensadoresRegular; i++) {
+            modelosRegular[i] = "Modelo " + to_string(i + 1); // Asignamos modelo aleatorio
+        }
+        for (int i = 0; i < numDispensadoresPremium; i++) {
+            modelosPremium[i] = "Modelo " + to_string(i + 1); // Asignamos modelo aleatorio
+        }
+        for (int i = 0; i < numDispensadoresEcoExtra; i++) {
+            modelosEcoExtra[i] = "Modelo " + to_string(i + 1); // Asignamos modelo aleatorio
+        }
+    }
+
+    // Método para mostrar información de un dispensador
+    void mostrarInformacionDispensador(int i, string tipo) {
+        cout << "Datos del dispensador " << i + 1 << " (" << tipo << "):\n";
+        cout << "  Código: " << setw(6) << setfill('0') << (tipo == "Regular" ? codigosRegular[i] : tipo == "Premium" ? codigosPremium[i] : codigosEcoExtra[i]) << "\n";
+        cout << "  Ventas: " << (tipo == "Regular" ? ventasRegular[i] : tipo == "Premium" ? ventasPremium[i] : ventasEcoExtra[i]) << "\n";
+        cout << "  Número de ventas: " << (tipo == "Regular" ? numeroVentasRegular[i] : tipo == "Premium" ? numeroVentasPremium[i] : numeroVentasEcoExtra[i]) << "\n";
+        cout << "  Cédulas de venta: ";
+        const auto& cedulas = tipo == "Regular" ? cedulasRegular[i] : tipo == "Premium" ? cedulasPremium[i] : cedulasEcoExtra[i];
+        for (const auto& cedula : cedulas) {
+            cout << cedula << " "; // Muestra las cédulas asociadas
+        }
+        cout << "\n";
+    }
+
+    // Método para generar cédulas aleatorias
+    string generarCedulaAleatoria() {
+        string cedula = to_string(rand() % 100000000); // Genera una cédula aleatoria
+        return cedula;
+    }
+};
+
+int main() {
+    Tanquear gasolinera; // Creamos un objeto de la clase Tanquear
+    gasolinera.simularTanqueos(); // Simulamos el proceso de tanqueo
+    gasolinera.mostrarReporte(); // Mostramos el reporte final
+
+    // Solicitar información sobre un dispensador específico
+    int codigo;
+    cout << "\nIngrese el código del dispensador que desea consultar: ";
+    cin >> codigo; // Lee el código del dispensador a consultar
+    gasolinera.mostrarDatosDispensador(codigo); // Muestra los datos del dispensador
+
+    return 0; // Fin del programa
+}
