@@ -1,0 +1,197 @@
+#include <iostream>  // Biblioteca para entrada y salida estándar
+#include <cstdlib>   // Biblioteca para funciones generales (como rand)
+#include <ctime>     // Biblioteca para manipulación de tiempo
+#include <string>    // Biblioteca para usar la clase string
+
+using namespace std;
+
+// Definición de constantes para el número de zonas y modelos
+const int ZONAS = 3; 
+const int MODELOS = 3; 
+
+// Clase que gestiona la operación de los dispensadores de combustible
+class Tanquear {
+private:
+    // Matriz que almacena los nombres de los modelos de dispensadores
+    string modelos[ZONAS][MODELOS] = { {"Modelo A", "Modelo B", "Modelo C"},
+                                        {"Modelo D", "Modelo E", "Modelo F"},
+                                        {"Modelo G", "Modelo H", "Modelo I"} };
+
+    // Matriz que guarda el estado de cada dispensador (0 = Inactivo, 1 = Activo, 2 = En fuga)
+    int estados[ZONAS][MODELOS] = { 0 }; 
+    // Matriz que contiene las capacidades de los dispensadores
+    float capacidades[ZONAS][MODELOS] = { 100.0, 150.0, 200.0,
+                                            120.0, 180.0, 250.0,
+                                            130.0, 170.0, 220.0 };
+    // Matriz que registra las ventas en litros de cada dispensador
+    float ventas[ZONAS][MODELOS] = { 0.0 }; 
+
+public:
+    // Método que simula el proceso de tanqueo en los dispensadores activos
+    void simularTanqueos() {
+        for (int zona = 0; zona < ZONAS; zona++) {
+            for (int modelo = 0; modelo < MODELOS; modelo++) {
+                if (estados[zona][modelo] == 1) { // Si el dispensador está activo
+                    // Genera un número aleatorio de litros a tanqueados entre 1 y 50
+                    float litrosTanqueados = static_cast<float>(rand() % 50 + 1); 
+                    // Acumula los litros tanqueados en el dispensador correspondiente
+                    ventas[zona][modelo] += litrosTanqueados; 
+                    // Muestra el resultado del tanqueo
+                    cout << "Tanqueado " << litrosTanqueados << " litros en " 
+                         << modelos[zona][modelo] << " de Zona " << (zona + 1) << ".\n";
+                }
+            }
+        }
+    }
+
+    // Método que muestra un reporte de las ventas por zona
+    void mostrarReportePorZona() {
+        cout << "\nReporte por Zona:\n";
+        for (int zona = 0; zona < ZONAS; zona++) {
+            cout << "Zona " << (zona + 1) << ":\n"; 
+            for (int modelo = 0; modelo < MODELOS; modelo++) {
+                // Genera el código del dispensador basado en su posición
+                int codigo = (1 * 10000 + zona * 1000 + modelo); 
+                // Muestra el código, modelo, ventas y estado del dispensador
+                cout << "Código: " << codigo 
+                     << ", Modelo: " << modelos[zona][modelo]
+                     << ", Ventas: " << ventas[zona][modelo] << " litros"
+                     << ", Estado: " << (estados[zona][modelo] == 1 ? "Activo" : 
+                                         (estados[zona][modelo] == 2 ? "En fuga" : "Inactivo")) << "\n";
+            }
+        }
+    }
+
+    // Método que verifica si hay fugas en los dispensadores
+    void verificarFugasEnTodosLosDispensadores() {
+        cout << "\nVerificación de fugas:\n";
+        bool hayFugas = false; // Variable para verificar si hay alguna fuga
+
+        for (int zona = 0; zona < ZONAS; zona++) {
+            for (int modelo = 0; modelo < MODELOS; modelo++) {
+                if (estados[zona][modelo] == 2) { // Si el dispensador está en fuga
+                    hayFugas = true; // Indica que hay al menos una fuga
+                    // Muestra información del dispensador en fuga
+                    cout << "Modelo: " << modelos[zona][modelo]
+                         << ", Zona: " << (zona + 1)
+                         << ", Estado: En fuga"
+                         << ", Ventas: " << ventas[zona][modelo] << " litros"
+                         << ", Capacidad: " << capacidades[zona][modelo] << " litros\n";
+                }
+            }
+        }
+
+        if (!hayFugas) {
+            cout << "No hay dispensadores en fuga.\n"; // Mensaje si no hay fugas
+        }
+    }
+
+    // Método que muestra detalles de dispensadores que están inactivos
+    void mostrarDetallesDispensadoresInactivos() {
+        cout << "\nDetalles de dispensadores inactivos:\n";
+        bool hayInactivos = false; // Variable para verificar si hay dispensadores inactivos
+
+        for (int zona = 0; zona < ZONAS; zona++) {
+            for (int modelo = 0; modelo < MODELOS; modelo++) {
+                if (estados[zona][modelo] == 0) { // Si el dispensador está inactivo
+                    hayInactivos = true; // Indica que hay al menos un dispensador inactivo
+                    int codigo = (1 * 10000 + zona * 1000 + modelo); // Genera el código del dispensador
+                    // Muestra información del dispensador inactivo
+                    cout << "Código: " << codigo 
+                         << ", Modelo: " << modelos[zona][modelo] 
+                         << ", Estado: Inactivo" 
+                         << ", Ventas: " << ventas[zona][modelo] << " litros"
+                         << ", Capacidad: " << capacidades[zona][modelo] << " litros\n"; 
+                }
+            }
+        }
+
+        if (!hayInactivos) {
+            cout << "No hay dispensadores inactivos.\n"; // Mensaje si no hay inactivos
+        }
+    }
+
+    // Método que cambia el estado de un dispensador según su código
+    void cambiarEstadoDispensador(int codigo, int nuevoEstado) {
+        int zona = (codigo / 1000) % 10; // Determina la zona a partir del código
+        int modelo = codigo % 1000; // Determina el modelo a partir del código
+        modelo = modelo % 10; // Extrae el modelo
+
+        // Verifica que el código sea válido antes de cambiar el estado
+        if (zona >= 1 && zona <= ZONAS && modelo >= 0 && modelo < MODELOS) {
+            estados[zona - 1][modelo] = nuevoEstado; // Cambia el estado del dispensador
+            // Muestra el nuevo estado del dispensador
+            cout << "Estado del dispensador " << modelos[zona - 1][modelo] << " en Zona " << zona << " cambiado a " 
+                 << (nuevoEstado == 1 ? "Activo" : (nuevoEstado == 2 ? "En fuga" : "Inactivo")) << ".\n";
+        } else {
+            cout << "Código de dispensador no válido.\n"; // Mensaje de error si el código es inválido
+        }
+    }
+
+    // Método que activa todos los dispensadores
+    void activarTodosLosDispensadores() {
+        for (int zona = 0; zona < ZONAS; zona++) {
+            for (int modelo = 0; modelo < MODELOS; modelo++) {
+                estados[zona][modelo] = 1; // Cambia el estado a Activo
+            }
+        }
+        cout << "Todos los dispensadores han sido activados.\n"; // Mensaje de confirmación
+    }
+};
+
+// Función principal del programa
+int main() {
+    srand(static_cast<unsigned int>(time(0))); // Inicializa la semilla para la generación de números aleatorios
+    Tanquear dispensadores; // Crea un objeto de la clase Tanquear
+
+    int opcion; // Variable para almacenar la opción del menú
+    do {
+        // Muestra el menú de opciones
+        cout << "\nMenú:\n";
+        cout << "1. Simular tanqueos\n";
+        cout << "2. Mostrar reporte por zona\n";
+        cout << "3. Verificar fugas en dispensadores\n";
+        cout << "4. Mostrar detalles dispensadores inactivos\n";
+        cout << "5. Cambiar estado de dispensador\n";
+        cout << "6. Activar todos los dispensadores\n"; 
+        cout << "0. Salir\n";
+        cout << "Elige una opción: "; 
+        cin >> opcion; // Lee la opción del usuario
+
+        // Ejecuta la acción correspondiente según la opción elegida
+        switch (opcion) {
+            case 1:
+                dispensadores.simularTanqueos(); // Llama al método de simular tanqueos
+                break;
+            case 2:
+                dispensadores.mostrarReportePorZona(); // Llama al método de mostrar reporte por zona
+                break;
+            case 3:
+                dispensadores.verificarFugasEnTodosLosDispensadores(); // Llama al método para verificar fugas
+                break;
+            case 4:
+                dispensadores.mostrarDetallesDispensadoresInactivos(); // Llama al método para mostrar dispensadores inactivos
+                break;
+            case 5: {
+                int codigo, nuevoEstado; // Variables para el código y nuevo estado
+                cout << "Ingresa el código del dispensador: "; 
+                cin >> codigo; // Lee el código del dispensador
+                cout << "Ingresa el nuevo estado (0: Inactivo, 1: Activo, 2: En fuga): "; 
+                cin >> nuevoEstado; // Lee el nuevo estado
+                dispensadores.cambiarEstadoDispensador(codigo, nuevoEstado); // Llama al método para cambiar el estado
+                break;
+            }
+            case 6:
+                dispensadores.activarTodosLosDispensadores(); // Llama al método para activar todos los dispensadores
+                break;
+            case 0:
+                cout << "Saliendo del programa.\n"; // Mensaje de salida
+                break;
+            default:
+                cout << "Opción no válida. Intenta de nuevo.\n"; // Mensaje de error para opción no válida
+                break;
+        }
+    } while (opcion != 0); // Continúa hasta que el usuario elija salir
+
+    return 0; // Fin del programa
+}
